@@ -11,11 +11,10 @@ from patchright.async_api import async_playwright
 # ══════════════════════════════════════════════════
 #  👇👇👇  تنظیمات  👇👇👇
 # ══════════════════════════════════════════════════
-URL = "https://nanswap.com/nano-faucet?utm_source=chatgpt.com"       # ← آدرس سایت رو اینجا بذار
-OUTPUT_FOLDER = "nano_addresses"       # ← پوشه‌ی ذخیره
+URL = "https://nanswap.com/nano-faucet?utm_source=chatgpt.com"       # ← آدرس سایت
+OUTPUT_FOLDER = "nano_addresses"       # ← پوشه‌ی خروجی
 # ══════════════════════════════════════════════════
 
-# ── مرورگر ──
 VIEWPORT_WIDTH = 1920
 VIEWPORT_HEIGHT = 1080
 CLICK_X = 1037
@@ -23,7 +22,6 @@ CLICK_Y = 294
 WAIT_BEFORE_SHOT = 10
 
 
-# ── Nano ──
 NANO_ALPHABET = "13456789abcdefghijkmnopqrstuwxyz"
 
 
@@ -56,7 +54,6 @@ def address_from_seed_index(seed: bytes, index: int) -> str:
 
 
 def generate_address():
-    """یک seed و یک آدرس می‌سازه."""
     seed_hex = secrets.token_hex(32).upper()
     seed = bytes.fromhex(seed_hex)
     address = address_from_seed_index(seed, 0)
@@ -64,17 +61,14 @@ def generate_address():
 
 
 async def process(page, address: str, shot_path: Path):
-    # ۱. باز کردن سایت
     print(f"  → باز کردن {URL} ...")
     await page.goto(URL, wait_until="domcontentloaded", timeout=60000)
     await page.wait_for_timeout(3000)
 
-    # ۲. کلیک روی مختصات
     print(f"  → کلیک روی ({CLICK_X}, {CLICK_Y})")
     await page.mouse.click(CLICK_X, CLICK_Y)
     await page.wait_for_timeout(500)
 
-    # ۳. رسم دایره
     print("  → رسم دایره")
     await page.evaluate(f"""
         () => {{
@@ -94,30 +88,33 @@ async def process(page, address: str, shot_path: Path):
         }}
     """)
 
-    # ۴. تایپ آدرس
     print(f"  → تایپ آدرس: {address}")
     await page.keyboard.type(address, delay=20)
 
-    # ۵. صبر ۱۰ ثانیه
     print(f"  → صبر {WAIT_BEFORE_SHOT} ثانیه ...")
     await page.wait_for_timeout(WAIT_BEFORE_SHOT * 1000)
 
-    # ۶. اسکرین‌شات
     await page.screenshot(path=str(shot_path), full_page=False)
     print(f"  ✓ اسکرین‌شات: {shot_path}")
 
 
 async def main():
     output_dir = Path(OUTPUT_FOLDER)
+
+    # ── پاک کردن فایل‌های قدیمی ──
+    if output_dir.exists():
+        for f in output_dir.iterdir():
+            if f.is_file():
+                f.unlink()
+        print(f"→ پوشه‌ی {OUTPUT_FOLDER} خالی شد.")
     output_dir.mkdir(exist_ok=True)
 
-    # ── تولید یک آدرس ──
+    # ── تولید یک seed و یک آدرس ──
     print("→ تولید seed و آدرس ...")
     seed_hex, address = generate_address()
     print(f"  SEED:    {seed_hex}")
     print(f"  ADDRESS: {address}")
 
-    # ── نام فایل = خود آدرس ──
     shot_path = output_dir / f"{address}.png"
 
     # ── مرورگر ──
@@ -134,12 +131,10 @@ async def main():
             ),
         )
         page = await context.new_page()
-
         await process(page, address, shot_path)
-
         await browser.close()
 
-    # ── ذخیره‌ی seed و آدرس کنار اسکرین‌شات ──
+    # ── فایل info کنار اسکرین‌شات ──
     info_path = output_dir / f"{address}.txt"
     info_path.write_text(
         f"SEED: {seed_hex}\nADDRESS: {address}\n",
@@ -147,7 +142,7 @@ async def main():
     )
     print(f"  ✓ فایل اطلاعات: {info_path}")
     print()
-    print("✓ تمام شد.")
+    print(f"✓ تمام شد. خروجی در {OUTPUT_FOLDER}/")
 
 
 if __name__ == "__main__":
