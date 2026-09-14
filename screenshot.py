@@ -8,7 +8,7 @@ from patchright.async_api import async_playwright
 
 
 # ── تنظیمات سایت ──
-URL = "https://your-website.com"
+URL = "https://nanswap.com/nano-faucet?utm_source=chatgpt.com"
 VIEWPORT_WIDTH = 1920
 VIEWPORT_HEIGHT = 1080
 
