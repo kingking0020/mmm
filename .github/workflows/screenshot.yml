@@ -1,4 +1,4 @@
-name: Generate Nano Address
+name: Nano Address Screenshot
 
 on:
   workflow_dispatch:
@@ -7,9 +7,9 @@ permissions:
   contents: write
 
 jobs:
-  generate:
+  screenshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -27,14 +27,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          python -m patchright install chromium
 
       - name: Run script
-        run: python generate.py
+        run: python screenshot.py
 
       - name: Upload as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nano-address-${{ github.run_number }}
+          name: nano-output-${{ github.run_number }}
           path: nano_addresses/
           retention-days: 30
           if-no-files-found: error
@@ -47,5 +48,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GG_TOKEN}@github.com/${{ github.repository }}.git
           git add nano_addresses/
-          git commit -m "chore: add nano address [skip ci]" || echo "no changes to commit"
+          git commit -m "chore: add nano address screenshot [skip ci]" || echo "no changes to commit"
           git push
