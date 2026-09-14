@@ -9,26 +9,22 @@ from patchright.async_api import async_playwright
 
 
 # ══════════════════════════════════════════════════
-#  👇👇👇  آدرس سایت رو اینجا بذار  👇👇👇
+#  👇 تنظیمات اصلی
 # ══════════════════════════════════════════════════
-URL = "https://nanswap.com/nano-faucet?utm_source=chatgpt.com"
+URL = "https://your-website.com"       # آدرس سایت
+OUTPUT_FOLDER = "nano_addresses"       # پوشه‌ی ذخیره‌ی اسکرین‌شات‌ها
 # ══════════════════════════════════════════════════
 
-
-# ── تنظیمات مرورگر ──
+# ── مرورگر ──
 VIEWPORT_WIDTH = 1920
 VIEWPORT_HEIGHT = 1080
-
 CLICK_X = 1037
 CLICK_Y = 294
-
 WAIT_BEFORE_SHOT = 10
 
-# ── تنظیمات تولید آدرس ──
-NUM_SEEDS = 3
-ADDRESSES_PER_SEED = 3
+# ── تولید ──
+NUM_ADDRESSES = 1        # ← فقط یک آدرس
 
-OUTPUT_DIR = Path("screenshots")
 RESULTS_FILE = Path("results.txt")
 
 
@@ -61,30 +57,18 @@ def nano_address(public_key: bytes) -> str:
 
 def address_from_seed_index(seed: bytes, index: int) -> str:
     pk = hashlib.blake2b(seed + index.to_bytes(4, "big"), digest_size=32).digest()
-    pub = ed25519_pubkey(pk)
-    return nano_address(pub)
+    return nano_address(ed25519_pubkey(pk))
 
 
-def generate_addresses():
-    results = []
-    for seed_number in range(1, NUM_SEEDS + 1):
-        seed_hex = secrets.token_hex(32).upper()
-        seed = bytes.fromhex(seed_hex)
-        entry = {"seed": seed_hex, "addresses": []}
-
-        print("=" * 70)
-        print(f"SEED #{seed_number}: {seed_hex}")
-
-        for index in range(ADDRESSES_PER_SEED):
-            addr = address_from_seed_index(seed, index)
-            entry["addresses"].append(addr)
-            print(f"  [{index}] {addr}")
-
-        results.append(entry)
-    return results
+def generate_address():
+    """یک seed و یک آدرس می‌سازه."""
+    seed_hex = secrets.token_hex(32).upper()
+    seed = bytes.fromhex(seed_hex)
+    address = address_from_seed_index(seed, 0)
+    return seed_hex, address
 
 
-async def process_address(page, address, shot_path: Path):
+async def process_address(page, address: str, shot_path: Path):
     print(f"  → باز کردن {URL} ...")
     await page.goto(URL, wait_until="domcontentloaded", timeout=60000)
     await page.wait_for_timeout(3000)
@@ -119,26 +103,31 @@ async def process_address(page, address, shot_path: Path):
     await page.wait_for_timeout(WAIT_BEFORE_SHOT * 1000)
 
     await page.screenshot(path=str(shot_path), full_page=False)
-    print(f"  ✓ اسکرین‌شات: {shot_path}")
+    print(f"  ✓ اسکرین‌شات ذخیره شد: {shot_path}")
 
 
 async def main():
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    # ساخت پوشه
+    output_dir = Path(OUTPUT_FOLDER)
+    output_dir.mkdir(exist_ok=True)
 
-    print("→ تولید seed و آدرس‌ها ...")
-    results = generate_addresses()
+    # ── تولید یک آدرس ──
+    print("→ تولید seed و آدرس ...")
+    seed_hex, address = generate_address()
+    print(f"  SEED:    {seed_hex}")
+    print(f"  ADDRESS: {address}")
 
-    lines = []
-    for i, entry in enumerate(results, 1):
-        lines.append("=" * 70)
-        lines.append(f"SEED #{i}: {entry['seed']}")
-        for j, addr in enumerate(entry["addresses"]):
-            lines.append(f"  [{j}] {addr}")
-        lines.append("")
-
-    RESULTS_FILE.write_text("\n".join(lines), encoding="utf-8")
+    # ── ذخیره در results.txt ──
+    RESULTS_FILE.write_text(
+        f"SEED: {seed_hex}\nADDRESS: {address}\n",
+        encoding="utf-8",
+    )
     print(f"✓ نتایج ذخیره شد: {RESULTS_FILE}")
 
+    # ── نام فایل = خود آدرس ──
+    shot_path = output_dir / f"{address}.png"
+
+    # ── اجرای مرورگر ──
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(
@@ -153,19 +142,12 @@ async def main():
         )
         page = await context.new_page()
 
-        counter = 0
-        for seed_idx, entry in enumerate(results, 1):
-            for addr_idx, address in enumerate(entry["addresses"]):
-                counter += 1
-                print()
-                print(f"── [{counter}] seed #{seed_idx} / address #{addr_idx} ──")
-                shot_path = OUTPUT_DIR / f"shot_{counter:02d}.png"
-                await process_address(page, address, shot_path)
+        await process_address(page, address, shot_path)
 
         await browser.close()
 
     print()
-    print("✓ همه‌چیز تمام شد.")
+    print(f"✓ تمام شد. اسکرین‌شات: {shot_path}")
 
 
 if __name__ == "__main__":
