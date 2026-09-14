@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GG_TOKEN }}      # ← اینجا عوض شد
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -41,9 +41,12 @@ jobs:
           if-no-files-found: error
 
       - name: Commit results to repo
+        env:
+          GG_TOKEN: ${{ secrets.GG_TOKEN }}     # ← برای git push هم ازش استفاده کن
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GG_TOKEN}@github.com/${{ github.repository }}.git
           git add results.txt screenshots/
           git commit -m "chore: add generated nano addresses [skip ci]" || echo "no changes to commit"
           git push
