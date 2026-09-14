@@ -29,18 +29,16 @@ jobs:
           pip install -r requirements.txt
           python -m patchright install chromium
 
-      # ── پاک کردن پوشه‌ی قدیمی توی ریپو ──
-      - name: Clean old outputs
-        run: rm -rf nano_addresses/
-
       - name: Run script
         run: python screenshot.py
 
-      - name: Upload as artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: nano-output-${{ github.run_number }}
-          path: nano_addresses/
+          path: |
+            nano_addresses/
+            screenshots/
           retention-days: 30
           if-no-files-found: error
 
@@ -51,6 +49,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GG_TOKEN}@github.com/${{ github.repository }}.git
-          git add -A nano_addresses/
-          git commit -m "chore: update nano address [skip ci]" || echo "no changes to commit"
-          git push --force-with-lease || git push
+          git add nano_addresses/ screenshots/
+          git commit -m "chore: add nano address + screenshot [skip ci]" || echo "no changes to commit"
+          git push
