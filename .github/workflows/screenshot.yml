@@ -1,16 +1,21 @@
-name: Website Screenshot
+name: Nano Address Screenshot
 
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   screenshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -24,13 +29,21 @@ jobs:
           pip install -r requirements.txt
           python -m patchright install chromium
 
-      - name: Take screenshot
+      - name: Run script
         run: python screenshot.py
 
-      - name: Upload screenshot
+      - name: Upload screenshots as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: screenshot-${{ github.run_number }}
-          path: screenshot.png
+          name: screenshots-${{ github.run_number }}
+          path: screenshots/
           retention-days: 30
           if-no-files-found: error
+
+      - name: Commit results to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add results.txt screenshots/
+          git commit -m "chore: add generated nano addresses [skip ci]" || echo "no changes to commit"
+          git push
