@@ -11,7 +11,7 @@ from patchright.async_api import async_playwright
 # ══════════════════════════════════════════════════
 #  👇 تنظیمات اصلی
 # ══════════════════════════════════════════════════
-URL = "https://your-website.com"       # آدرس سایت
+URL = "https://nanswap.com/nano-faucet?utm_source=chatgpt.com"       # آدرس سایت
 OUTPUT_FOLDER = "nano_addresses"       # پوشه‌ی ذخیره‌ی اسکرین‌شات‌ها
 # ══════════════════════════════════════════════════
 
