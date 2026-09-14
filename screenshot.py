@@ -62,7 +62,7 @@ def generate_address():
     return seed_hex, address
 
 
-async def process(page, address: str, shot_path: Path):
+async def process(page, address: str):
     print(f"  → باز کردن {URL} ...")
     await page.goto(URL, wait_until="domcontentloaded", timeout=60000)
     await page.wait_for_timeout(3000)
@@ -96,16 +96,11 @@ async def process(page, address: str, shot_path: Path):
     print(f"  → صبر {WAIT_BEFORE_SHOT} ثانیه ...")
     await page.wait_for_timeout(WAIT_BEFORE_SHOT * 1000)
 
-    await page.screenshot(path=str(shot_path), full_page=False)
-    print(f"  ✓ اسکرین‌شات: {shot_path}")
-
 
 async def main():
     # ── ساخت پوشه‌ها (بدون حذف چیزی) ──
     info_dir = Path(INFO_FOLDER)
-    shot_dir = Path(SHOT_FOLDER)
     info_dir.mkdir(exist_ok=True)
-    shot_dir.mkdir(exist_ok=True)
 
     # ── تولید یک seed و یک آدرس ──
     print("→ تولید seed و آدرس ...")
@@ -113,9 +108,8 @@ async def main():
     print(f"  SEED:    {seed_hex}")
     print(f"  ADDRESS: {address}")
 
-    # ── مسیرها ──
-    info_path = info_dir / f"{address}.txt"       # ← فقط این توی nano_addresses
-    shot_path = shot_dir / f"{address}.png"       # ← این توی screenshots
+    # ── مسیر ──
+    info_path = info_dir / f"{address}.txt"
 
     # ── مرورگر ──
     async with async_playwright() as p:
@@ -131,10 +125,10 @@ async def main():
             ),
         )
         page = await context.new_page()
-        await process(page, address, shot_path)
+        await process(page, address)
         await browser.close()
 
-    # ── ذخیره‌ی seed و address (بدون اسکرین‌شات) ──
+    # ── ذخیره‌ی seed و address ──
     info_path.write_text(
         f"SEED: {seed_hex}\nADDRESS: {address}\n",
         encoding="utf-8",
