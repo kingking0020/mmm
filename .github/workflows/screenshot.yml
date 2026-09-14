@@ -1,7 +1,6 @@
 name: Website Screenshot
 
 on:
-  # اجرای دستی از تب Actions
   workflow_dispatch:
     inputs:
       url:
@@ -9,25 +8,21 @@ on:
         required: true
         default: "https://chatgpt.com"
       full_page:
-        description: "اسکرین‌شات کل صفحه؟"
+        description: "کل صفحه اسکرین‌شات بشه؟"
         type: boolean
         default: true
-
-  # اجرای زمان‌بندی‌شده (هر روز ساعت ۶ صبح UTC = ۹:۳۰ تهران)
-  schedule:
-    - cron: "0 6 * * *"
-
-  # اجرا با هر push روی main (اختیاری)
-  push:
-    branches: [main]
+      wait_seconds:
+        description: "حداکثر ثانیه انتظار برای عبور از Cloudflare"
+        type: string
+        default: "20"
 
 jobs:
   screenshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -36,20 +31,66 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install dependencies
+      # ── نصب Chrome واقعی (Patchright با Chrome بهترین نتیجه رو داره) ──
+      - name: Install Google Chrome
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq wget
+          wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt-get install -y -qq /tmp/chrome.deb
+          google-chrome --version
+
+      # ── نصب پکیج‌های پایتون (patchright، نه playwright) ──
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          playwright install --with-deps chromium
 
-      - name: Take screenshot
+      # ── نصب Chromium مخصوص Patchright (برای fallback) ──
+      # نکته: از "patchright" استفاده کن، نه "playwright"
+      - name: Install Patchright Chromium
         run: |
-          python screenshot.py "${{ github.event.inputs.url || 'https://chatgpt.com' }}" screenshot.png
+          python -m patchright install chromium
 
-      - name: Upload screenshot as artifact
+      # ── بازسازی auth.json از Secret ──
+      - name: Restore auth state
+        env:
+          AUTH_B64: ${{ secrets.PLAYWRIGHT_AUTH_B64 }}
+        run: |
+          if [ -z "$AUTH_B64" ]; then
+            echo "⚠ Secret PLAYWRIGHT_AUTH_B64 تنظیم نشده — بدون auth اجرا می‌شه"
+          else
+            echo "$AUTH_B64" | base64 -d > auth.json
+            echo "✓ auth.json بازیابی شد"
+            ls -la auth.json
+          fi
+
+      # ── اجرای اسکرین‌شات ──
+      - name: Take screenshot
+        env:
+          AUTH_STATE_PATH: auth.json
+        run: |
+          python screenshot.py \
+            "${{ inputs.url }}" \
+            screenshot.png \
+            "${{ inputs.full_page }}" \
+            "${{ inputs.wait_seconds }}"
+
+      # ── آپلود artifact ──
+      - name: Upload screenshot
         uses: actions/upload-artifact@v4
         with:
-          name: website-screenshot-${{ github.run_number }}
+          name: screenshot-${{ github.run_number }}
           path: screenshot.png
           retention-days: 30
           if-no-files-found: error
+
+      - name: Upload debug on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-${{ github.run_number }}
+          path: |
+            *.png
+            *.log
+          retention-days: 7
