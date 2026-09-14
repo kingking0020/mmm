@@ -3,7 +3,7 @@ from patchright.async_api import async_playwright
 
 
 # ── تنظیمات پیش‌فرض ──
-URL = "https://your-website.com"
+URL = "https://nanswap.com/nano-faucet?utm_source=chatgpt.com"
 OUTPUT = "screenshot.png"
 FULL_PAGE = False          # False = مثل مرورگر واقعی، True = کل صفحه
 WAIT_SECONDS = 5
