@@ -1,17 +1,2 @@
-======================================================================
-SEED #1: 12AF6045AAE5F33AD82D386FF799F2C670B5FEC902E70F7BE51A3DBF156BF110
-  [0] nano_1nr7q6ci86c8oqgjxakjzowe4cxkhhs33cpm88z5aadxa579ix7w3o4r97oz
-  [1] nano_3iaxzi34bfbwzjspnpwatubzzibk3d8xwrhw6ih3qupne9joijh11cfxqwwh
-  [2] nano_38wuipxfif9mfpgh5g3riuakts93r1i8jn91udbxao4sz5xgushfr5patb6e
-
-======================================================================
-SEED #2: 25740AB0231DCC758120F6823858D082DA1AFE90544A465831578D9E2DEA47BC
-  [0] nano_18szp74d3676rakg1zjue1doaxwr1tocpod8oz1jrduhqouja398jcnban7n
-  [1] nano_3we45f349bae3t54otb3byzhx3bec8h8z61zgbu3cwy7hpk6d714j5w3sbme
-  [2] nano_1og6r7msmfggtdr3bn9k3xbchokeyjreand6x5oaeob18awcie7wwkxd71h8
-
-======================================================================
-SEED #3: F57E6AA6AE74A6DCE41B6AB6BD35BA5FE27A61F3F5623F0B43862C2B7EE46054
-  [0] nano_1b7hoaj4krbnz7koinutnuenrzdue4y751mm4r9zsxm1a3xzbs4yi1tq6411
-  [1] nano_16gtdkh3ig3obyn5e3xtxq3qfbu5zmmfn5z19ddh1pm7k4pwm9e3xwjwra4e
-  [2] nano_11nmiktzjmt74tcjt3y3iq9cuzirxh8697knxb7fduym8wistzmduqfcodwx
+SEED: 1DA1073FBCD40225674D7EE6388D9FE72E762E8B77699BD9C3D2B4A5EC3CB848
+ADDRESS: nano_3dtdqej5gatsnozyp6ed59d7rr36hzua9x5qtkjuuosdaogbc16cwhgmm4w1
