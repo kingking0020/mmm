@@ -2,27 +2,6 @@ name: Website Screenshot
 
 on:
   workflow_dispatch:
-    inputs:
-      url:
-        description: "URL مورد نظر برای اسکرین‌شات"
-        required: true
-        default: "https://example.com"
-      full_page:
-        description: "کل صفحه اسکرین‌شات بشه؟ (خیر = مثل مرورگر واقعی)"
-        type: boolean
-        default: false
-      wait_seconds:
-        description: "ثانیه صبر بعد از لود صفحه"
-        type: string
-        default: "5"
-      viewport_width:
-        description: "عرض viewport (پیکسل)"
-        type: string
-        default: "1920"
-      viewport_height:
-        description: "ارتفاع viewport (پیکسل)"
-        type: string
-        default: "1080"
 
 jobs:
   screenshot:
@@ -46,15 +25,7 @@ jobs:
           python -m patchright install chromium
 
       - name: Take screenshot
-        env:
-          VIEWPORT_W: ${{ inputs.viewport_width }}
-          VIEWPORT_H: ${{ inputs.viewport_height }}
-        run: |
-          python screenshot.py \
-            "${{ inputs.url }}" \
-            screenshot.png \
-            "${{ inputs.full_page }}" \
-            "${{ inputs.wait_seconds }}"
+        run: python screenshot.py
 
       - name: Upload screenshot
         uses: actions/upload-artifact@v4
