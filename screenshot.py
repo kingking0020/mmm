@@ -12,7 +12,9 @@ from patchright.async_api import async_playwright
 #  👇👇👇  تنظیمات  👇👇👇
 # ══════════════════════════════════════════════════
 URL = "https://nanswap.com/nano-faucet?utm_source=chatgpt.com"       # ← آدرس سایت
-OUTPUT_FOLDER = "nano_addresses"       # ← پوشه‌ی خروجی
+
+INFO_FOLDER = "nano_addresses"         # ← فقط seed و address
+SHOT_FOLDER = "screenshots"            # ← فقط اسکرین‌شات‌ها
 # ══════════════════════════════════════════════════
 
 VIEWPORT_WIDTH = 1920
@@ -99,15 +101,11 @@ async def process(page, address: str, shot_path: Path):
 
 
 async def main():
-    output_dir = Path(OUTPUT_FOLDER)
-
-    # ── پاک کردن فایل‌های قدیمی ──
-    if output_dir.exists():
-        for f in output_dir.iterdir():
-            if f.is_file():
-                f.unlink()
-        print(f"→ پوشه‌ی {OUTPUT_FOLDER} خالی شد.")
-    output_dir.mkdir(exist_ok=True)
+    # ── ساخت پوشه‌ها (بدون حذف چیزی) ──
+    info_dir = Path(INFO_FOLDER)
+    shot_dir = Path(SHOT_FOLDER)
+    info_dir.mkdir(exist_ok=True)
+    shot_dir.mkdir(exist_ok=True)
 
     # ── تولید یک seed و یک آدرس ──
     print("→ تولید seed و آدرس ...")
@@ -115,7 +113,9 @@ async def main():
     print(f"  SEED:    {seed_hex}")
     print(f"  ADDRESS: {address}")
 
-    shot_path = output_dir / f"{address}.png"
+    # ── مسیرها ──
+    info_path = info_dir / f"{address}.txt"       # ← فقط این توی nano_addresses
+    shot_path = shot_dir / f"{address}.png"       # ← این توی screenshots
 
     # ── مرورگر ──
     async with async_playwright() as p:
@@ -134,15 +134,15 @@ async def main():
         await process(page, address, shot_path)
         await browser.close()
 
-    # ── فایل info کنار اسکرین‌شات ──
-    info_path = output_dir / f"{address}.txt"
+    # ── ذخیره‌ی seed و address (بدون اسکرین‌شات) ──
     info_path.write_text(
         f"SEED: {seed_hex}\nADDRESS: {address}\n",
         encoding="utf-8",
     )
-    print(f"  ✓ فایل اطلاعات: {info_path}")
+    print(f"  ✓ اطلاعات: {info_path}")
+
     print()
-    print(f"✓ تمام شد. خروجی در {OUTPUT_FOLDER}/")
+    print("✓ تمام شد.")
 
 
 if __name__ == "__main__":
